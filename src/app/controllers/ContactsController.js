@@ -5,8 +5,8 @@ import { parseISO } from "date-fns";
 import Customer from "../models/Customer";
 import Contact from "../models/Contact";
 
-class CustomersController {
-  // listagem dos registros
+class ContactsController{
+
   async index(req, res) {
     const {
       name,
@@ -22,7 +22,7 @@ class CustomersController {
     const page = req.query.page || 1;
     const limit = req.query.limit || 25;
 
-    let where = {};
+    let where = { customer_id: req.params.customerId };
     let order = [];
 
     if (name) {
@@ -94,13 +94,14 @@ class CustomersController {
 
     console.log(where)
 
-    const data = await Customer.findAll({
+    const data = await Contact.findAll({
       where,
       include: [
         {
-          model: Contact,
+          model: Customer,
           attributes: ["id", "status"],
-        }
+          required: true,
+        },
       ],
       order,
       limit,
@@ -109,68 +110,16 @@ class CustomersController {
     return res.json(data);
   }
 
-  // listagem 1 registro
   async show(req, res) {
-    const customer = await Customer.findByPk(req.params.id);
+    const contact = await Contact.findByPk(req.params.id);
 
-    if(!customer){
+    if(!contact){
       return res.status(404).json();
     }
 
-    return res.json(customer);
+    return res.json(contact);
   }
 
-  //criar um objeto
-  async create(req, res){
-
-    const schema = Yup.object().shape({
-      name: Yup.string().required(),
-      email: Yup.string().email().required(),
-      status: Yup.string().uppercase(),
-    });
-
-    if(!(await schema.isValid(req.body))){
-      return res.status(400).json({error: "Error on validate schema."})
-    };
-
-    const customer = await Customer.create(req.body);
-
-    return res.status(201).json(customer);
-  }
-
-  async update(req, res){
-    const schema = Yup.object().shape({
-      name: Yup.string(),
-      email: Yup.string().email(),
-      status: Yup.string().uppercase(),
-    });
-
-    if(!(await schema.isValid(req.body))){
-      return res.status(400).json({error: "Error on validate schema."})
-    };
-
-    const customer = await Customer.findByPk(req.params.id);
-
-    if(!customer){
-      return res.status(404).json();
-    }
-
-    await customer.update(req.body);
-
-    return res.json(customer);
-  }
-
-  async destroy(req, res){
-    const customer = await Customer.findByPk(req.params.id);
-
-    if(!customer){
-      return res.status(404).json();
-    }
-
-    await customer.destroy();
-
-    return res.json();
-  }
 }
 
-export default new CustomersController();
+export default new ContactsController();
